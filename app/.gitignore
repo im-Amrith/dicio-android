@@ -1,3 +1,4 @@
 /build
 /release
 /src/main/api_keys.json
+/libs/*.aar

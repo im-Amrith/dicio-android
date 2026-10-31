@@ -109,6 +109,12 @@ fun inputDevice() = ListSetting(
     description = stringResource(R.string.pref_input_method_summary),
     possibleValues = listOf(
         ListSetting.Value(
+            value = InputDevice.INPUT_DEVICE_WHISPER,
+            name = stringResource(R.string.pref_input_method_whisper),
+            description = stringResource(R.string.pref_input_method_whisper_summary),
+            icon = Icons.Default.Mic,
+        ),
+        ListSetting.Value(
             value = InputDevice.INPUT_DEVICE_VOSK,
             name = stringResource(R.string.pref_input_method_vosk),
             description = stringResource(R.string.pref_input_method_vosk_summary),

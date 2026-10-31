@@ -131,7 +131,26 @@ tasks.withType(UnicodeCldrLanguagesTask::class) {
     unicodeCldrGitCommit = libs.versions.unicodeCldrGitCommit
 }
 
+// sherpa-onnx (Whisper speech to text) is not on Maven Central, so the prebuilt .aar is
+// downloaded from the GitHub release the first time Gradle runs, and kept in app/libs/.
+val sherpaOnnxVersion = "2.0.1"
+val sherpaOnnxAar: File = file("libs/sherpa-onnx-$sherpaOnnxVersion.aar")
+if (!sherpaOnnxAar.exists()) {
+    val url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/" +
+        "v$sherpaOnnxVersion/sherpa-onnx-$sherpaOnnxVersion.aar"
+    logger.lifecycle("Downloading $url")
+    sherpaOnnxAar.parentFile.mkdirs()
+    val partial = File(sherpaOnnxAar.path + ".part")
+    uri(url).toURL().openStream().use { input ->
+        partial.outputStream().use { output -> input.copyTo(output) }
+    }
+    partial.renameTo(sherpaOnnxAar)
+}
+
 dependencies {
+    // Whisper speech to text through sherpa-onnx (includes the Kotlin API and native libs)
+    implementation(files(sherpaOnnxAar))
+
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
