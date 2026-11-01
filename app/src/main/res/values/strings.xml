@@ -294,4 +294,8 @@
     <string name="pref_gemini_key_title">Gemini API key (cloud AI)</string>
     <string name="pref_gemini_key_empty">Not set: only the offline AI is used. Get a free key at aistudio.google.com</string>
     <string name="pref_gemini_key_set">Cloud AI on, with web search</string>
+    <string name="skill_music_opened_needs_accessibility">Opened %1$s in Spotify. To let me press play for you, turn on Mello Spotify player in Settings, Accessibility, Installed apps</string>
+    <string name="skill_music_opened_could_not_press">Opened %1$s in Spotify, but I could not find the play button</string>
+    <string name="spotify_play_presser_label">Mello Spotify player</string>
+    <string name="spotify_play_presser_description">Lets Mello tap the Play button in Spotify after you ask it to play a song. It can only see and tap inside Spotify.</string>
 </resources>

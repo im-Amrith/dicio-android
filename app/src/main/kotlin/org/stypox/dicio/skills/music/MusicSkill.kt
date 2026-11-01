@@ -17,7 +17,9 @@ import org.dicio.skill.skill.SkillInfo
 import org.dicio.skill.skill.SkillOutput
 import org.dicio.skill.standard.StandardRecognizerData
 import org.dicio.skill.standard.StandardRecognizerSkill
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.stypox.dicio.sentences.Sentences.Music
 import org.stypox.dicio.skills.notify.NotifyHandler
 
@@ -42,6 +44,7 @@ class MusicSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerData
         const val SPOTIFY_PACKAGE = "com.spotify.music"
         private const val SESSION_WAIT_MILLIS = 8000L
         private const val PLAY_WAIT_MILLIS = 5000L
+        private const val PAGE_LOAD_MILLIS = 1500L
 
         private val TRAILING_NOISE = Regex(
             """\s+(on|in|from|with|using|via)\s+spotify\s*$|\s+(please|now|for me)\s*$"""
@@ -63,6 +66,22 @@ class MusicSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerData
         suspend fun playOnSpotify(context: Context, query: String): MusicOutput.Result {
             if (!isSpotifyInstalled(context)) {
                 return MusicOutput.Result.NOT_INSTALLED
+            }
+
+            // Best way: open the exact song page and tap Spotify's own Play button
+            val uri = withContext(Dispatchers.IO) { SpotifyLinkFinder.find(query) }
+            if (uri != null) {
+                try {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+                            .setPackage(SPOTIFY_PACKAGE)
+                            .putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://" + context.packageName))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                    return waitAndPressPlay(context)
+                } catch (e: ActivityNotFoundException) {
+                    Log.w(TAG, "Spotify could not open $uri", e)
+                }
             }
 
             var controller = spotifyController(context)
@@ -117,6 +136,24 @@ class MusicSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerData
                     MusicOutput.Result.NOT_INSTALLED
                 }
             }
+        }
+
+        /** After a Spotify page was opened, waits for it to load and presses Play on it. */
+        private suspend fun waitAndPressPlay(context: Context): MusicOutput.Result {
+            val presser = SpotifyPlayPresser.instance ?: return MusicOutput.Result.OPENED_NEEDS_ACCESSIBILITY
+            delay(PAGE_LOAD_MILLIS) // let Spotify come to the front and load the page
+            val deadline = System.currentTimeMillis() + PLAY_WAIT_MILLIS
+            while (System.currentTimeMillis() < deadline) {
+                if (presser.pressPlay()) {
+                    return MusicOutput.Result.PLAYING
+                }
+                delay(500)
+            }
+            // maybe Spotify started playing on its own
+            if (spotifyController(context)?.playbackState?.state == PlaybackState.STATE_PLAYING) {
+                return MusicOutput.Result.PLAYING
+            }
+            return MusicOutput.Result.OPENED_COULD_NOT_PRESS
         }
 
         private fun spotifyController(context: Context): MediaController? = try {

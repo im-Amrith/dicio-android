@@ -107,6 +107,20 @@
                 android:resource="@xml/stt_service_metadata" />
         </service>
 
+        <!-- optional: taps Spotify's Play button after Mello opens a song (Spotify only) -->
+        <service
+            android:name=".skills.music.SpotifyPlayPresser"
+            android:exported="false"
+            android:label="@string/spotify_play_presser_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/spotify_play_presser" />
+        </service>
+
         <service
             android:name=".skills.notify.NotifyHandler"
             android:description="@string/skill_notify_handler_label"

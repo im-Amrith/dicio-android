@@ -294,7 +294,7 @@ class AiBrain @Inject constructor(
 
     private fun Reply.toResult(): Result = when (this) {
         is Reply.Cmd -> Result.Command(text)
-        is Reply.Say -> Result.Answer(text)
+        is Reply.Say -> Result.Answer(shortenForSpeech(text))
         // a second search is not allowed, so the model gave up
         is Reply.Search -> Result.Answer("Sorry, I couldn't find anything about that.")
     }
@@ -311,6 +311,36 @@ class AiBrain @Inject constructor(
 
         private val THINK_BLOCK = Regex("""<think>[\s\S]*?</think>""")
         private val PREFIX = Regex("""^\W*(CMD|SAY|SEARCH)\s*:\s*""", RegexOption.IGNORE_CASE)
+
+        private const val MAX_SPOKEN_SENTENCES = 3
+        private const val MAX_SPOKEN_CHARS = 350
+        private val SENTENCE_END = Regex("""(?<=[.!?])\s+""")
+        private val LIST_OR_HEADING = Regex("""^\s*(\d+[.)]|[-•#>])\s*""")
+
+        /**
+         * Small models sometimes ignore the "short answer" instruction and write essays with
+         * numbered lists: keep only the first few sentences of normal prose, since this is spoken.
+         */
+        internal fun shortenForSpeech(text: String): String {
+            val prose = text.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !LIST_OR_HEADING.containsMatchIn(it) }
+                .joinToString(" ")
+                .replace(Regex("""[*_#`]"""), "")
+                .replace(Regex("""\s+"""), " ")
+                .trim()
+                .ifEmpty { text.replace(Regex("""\s+"""), " ").trim() }
+            // sentences like "Here's an overview of its key milestones:" introduce a list that
+            // was cut away, so they are dropped too
+            val sentences = SENTENCE_END.split(prose).filter { !it.trimEnd().endsWith(":") }
+            var short = (sentences.ifEmpty { listOf(prose) })
+                .take(MAX_SPOKEN_SENTENCES).joinToString(" ")
+            if (short.length > MAX_SPOKEN_CHARS) {
+                val cut = short.take(MAX_SPOKEN_CHARS)
+                short = cut.substring(0, cut.lastIndexOf(' ').takeIf { it > 0 } ?: cut.length) + "…"
+            }
+            return short
+        }
 
         internal fun parseReply(raw: String): Reply {
             val text = raw.replace(THINK_BLOCK, "")

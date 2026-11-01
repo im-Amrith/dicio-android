@@ -9,12 +9,17 @@ class MusicOutput(
     private val result: Result,
     private val query: String?,
 ) : HeadlineSpeechSkillOutput {
-    enum class Result { PLAYING, SEARCHING, NOT_INSTALLED, NO_QUERY }
+    enum class Result {
+        PLAYING, SEARCHING, NOT_INSTALLED, NO_QUERY, OPENED_NEEDS_ACCESSIBILITY, OPENED_COULD_NOT_PRESS
+    }
 
     override fun getSpeechOutput(ctx: SkillContext): String = when (result) {
         Result.PLAYING -> ctx.getString(R.string.skill_music_playing, query ?: "")
         Result.SEARCHING -> ctx.getString(R.string.skill_music_searching, query ?: "")
         Result.NOT_INSTALLED -> ctx.getString(R.string.skill_music_not_installed)
         Result.NO_QUERY -> ctx.getString(R.string.skill_music_no_query)
+        Result.OPENED_NEEDS_ACCESSIBILITY ->
+            ctx.getString(R.string.skill_music_opened_needs_accessibility, query ?: "")
+        Result.OPENED_COULD_NOT_PRESS -> ctx.getString(R.string.skill_music_opened_could_not_press, query ?: "")
     }
 }
