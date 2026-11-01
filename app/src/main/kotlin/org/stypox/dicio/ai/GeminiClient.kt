@@ -97,7 +97,9 @@ class GeminiClient(baseClient: OkHttpClient) {
 
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-        // always points at Google's newest Flash model
-        private const val MODEL = "gemini-flash-latest"
+        // Gemini 3.5 Flash Lite: fast replies (good for voice) and the most generous limits on
+        // this account (4K requests/minute, 150K/day). For harder questions, "gemini-3.8-flash"
+        // is smarter but allows 10K requests/day.
+        private const val MODEL = "gemini-3.5-flash-lite"
     }
 }
