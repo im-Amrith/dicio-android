@@ -26,32 +26,65 @@ class GeminiClient(baseClient: OkHttpClient) {
     /** The API answered with an error, e.g. a wrong key (400/403) or quota exceeded (429). */
     class ApiException(val code: Int, message: String) : IOException(message)
 
+    // model -> time until which it is skipped because its free quota ran out
+    private val exhaustedUntil = mutableMapOf<String, Long>()
+
+    /**
+     * Tries the free models in [MODELS] order; when one is out of free quota (HTTP 429) or not
+     * available (404), moves on to the next one, and skips it for a while.
+     */
     suspend fun generate(apiKey: String, systemPrompt: String, turns: List<Turn>): String =
         withContext(Dispatchers.IO) {
-            try {
-                request(apiKey, systemPrompt, turns, lowThinking = true)
-            } catch (e: ApiException) {
-                // older models don't know "thinkingLevel": retry without it
-                if (e.code == 400 && e.message?.contains("thinking", ignoreCase = true) == true) {
-                    request(apiKey, systemPrompt, turns, lowThinking = false)
-                } else {
-                    throw e
+            var lastError: ApiException? = null
+            for (model in MODELS) {
+                if ((exhaustedUntil[model] ?: 0L) > System.currentTimeMillis()) continue
+                try {
+                    return@withContext requestWithRetry(model, apiKey, systemPrompt, turns)
+                } catch (e: ApiException) {
+                    if (e.code != 429 && e.code != 404) throw e
+                    exhaustedUntil[model] = System.currentTimeMillis() +
+                        if (e.code == 404) 24 * 60 * 60 * 1000L else EXHAUSTED_SKIP_MILLIS
+                    lastError = e
                 }
             }
+            throw lastError ?: ApiException(429, "All free models are out of quota")
         }
 
+    private fun requestWithRetry(
+        model: String,
+        apiKey: String,
+        systemPrompt: String,
+        turns: List<Turn>,
+    ): String {
+        val isGemma = model.startsWith("gemma")
+        return try {
+            request(model, apiKey, systemPrompt, turns, lowThinking = !isGemma, inlineSystem = isGemma)
+        } catch (e: ApiException) {
+            // some models don't know "thinkingLevel" or system instructions: retry without them
+            if (e.code == 400) {
+                request(model, apiKey, systemPrompt, turns, lowThinking = false, inlineSystem = true)
+            } else {
+                throw e
+            }
+        }
+    }
+
     private fun request(
+        model: String,
         apiKey: String,
         systemPrompt: String,
         turns: List<Turn>,
         lowThinking: Boolean,
+        inlineSystem: Boolean,
     ): String {
         val contents = JSONArray()
-        for (turn in turns) {
+        for ((i, turn) in turns.withIndex()) {
+            // models without system instructions (Gemma) get them in the first message instead
+            val text = if (inlineSystem && i == 0) "$systemPrompt\n\n${turn.text}" else turn.text
             contents.put(
                 JSONObject()
                     .put("role", if (turn.fromUser) "user" else "model")
-                    .put("parts", JSONArray().put(JSONObject().put("text", turn.text)))
+                    .put("parts", JSONArray().put(JSONObject().put("text", text)))
             )
         }
         val generationConfig = JSONObject()
@@ -62,15 +95,17 @@ class GeminiClient(baseClient: OkHttpClient) {
             generationConfig.put("thinkingConfig", JSONObject().put("thinkingLevel", "low"))
         }
         val body = JSONObject()
-            .put(
+            .put("contents", contents)
+            .put("generationConfig", generationConfig)
+        if (!inlineSystem) {
+            body.put(
                 "systemInstruction",
                 JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt)))
             )
-            .put("contents", contents)
-            .put("generationConfig", generationConfig)
+        }
 
         val request = Request.Builder()
-            .url("$BASE_URL/models/$MODEL:generateContent")
+            .url("$BASE_URL/models/$model:generateContent")
             .header("x-goog-api-key", apiKey)
             .post(body.toString().toRequestBody("application/json".toMediaType()))
             .build()
@@ -97,9 +132,16 @@ class GeminiClient(baseClient: OkHttpClient) {
 
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-        // Gemini 3.5 Flash Lite: fast replies (good for voice) and the most generous limits on
-        // this account (4K requests/minute, 150K/day). For harder questions, "gemini-3.8-flash"
-        // is smarter but allows 10K requests/day.
-        private const val MODEL = "gemini-3.5-flash-lite"
+        private const val EXHAUSTED_SKIP_MILLIS = 10 * 60 * 1000L
+
+        /**
+         * Free-tier models, best first. Flash Lite models are fast (good for voice) with 500 free
+         * requests a day each; Gemma 4 is slower but allows 14,400 a day, so it catches the rest.
+         */
+        private val MODELS = listOf(
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemma-4-31b-it",
+        )
     }
 }

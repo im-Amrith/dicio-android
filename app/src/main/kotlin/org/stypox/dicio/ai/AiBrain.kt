@@ -107,6 +107,13 @@ class AiBrain @Inject constructor(
                 return interpretWithCloud(apiKey, userInput)
             } catch (e: GeminiClient.ApiException) {
                 Log.e(TAG, "Gemini error ${e.code}", e)
+                val msg = e.message.orEmpty()
+                if (msg.contains("prepay", true) || msg.contains("billing", true)) {
+                    return Result.Unavailable(
+                        "This Gemini key belongs to a project with billing on and no credit. Use " +
+                            "a key from a free project (AI Studio, create key in new project)."
+                    )
+                }
                 when (e.code) {
                     400, 401, 403 -> return Result.Unavailable(
                         "My cloud brain rejected the API key. Please check it in settings."
