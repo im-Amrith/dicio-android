@@ -20,7 +20,10 @@ class Contact(val name: String, val distance: Int, private val id: String) {
                 while (phoneNumberCursor.moveToNext()) {
                     val number = phoneNumberCursor.getString(numberColumnIndex)
                     if (!number.isNullOrEmpty()) {
+                        // compare only the last 10 digits, so "+91 98765 43210" and
+                        // "098765 43210" count as the same number
                         val cleanedNumber = NUMBER_CLEANER.matcher(number).replaceAll("")
+                            .takeLast(10)
                         if (!cleanedNumbers.contains(cleanedNumber)) {
                             numbers.add(number)
                             cleanedNumbers.add(cleanedNumber) // prevent duplicated numbers

@@ -2,6 +2,7 @@ package org.stypox.dicio.ai
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.core.DataStore
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
@@ -16,28 +17,41 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import org.stypox.dicio.settings.datastore.UserSettings
 import org.stypox.dicio.ui.util.Progress
 import org.stypox.dicio.util.FileToDownload
 import org.stypox.dicio.util.downloadBinaryFilesWithPartial
 import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Mello's "AI brain": a small LLM (Qwen3 1.7B, int4) that runs fully on the phone through
- * LiteRT-LM. It is only asked when none of the built-in skills understood the user. It either
- * rewrites the request into a command that a skill understands ("play believer on spotify"),
- * or answers directly.
+ * Mello's "AI brain", asked only when none of the built-in skills understood the user. It either
+ * rewrites the request into a command a skill understands ("play believer on spotify"), searches
+ * the web for current information, or answers directly.
+ *
+ * - Cloud (preferred): Google Gemini, when an API key is set in settings. Smart, remembers the
+ *   last few exchanges so follow-up questions work.
+ * - Local (fallback, offline): Qwen3 1.7B running on the phone through LiteRT-LM.
+ *
+ * Both can use [WebLookup] for news and other real-time information.
  */
 @Singleton
 class AiBrain @Inject constructor(
     @param:ApplicationContext private val appContext: Context,
     private val okHttpClient: OkHttpClient,
+    private val dataStore: DataStore<UserSettings>,
 ) {
     sealed interface Status {
         data object NotDownloaded : Status
@@ -51,11 +65,25 @@ class AiBrain @Inject constructor(
         data class Command(val text: String) : Result
         /** Something to say to the user */
         data class Answer(val text: String) : Result
-        /** The model can't be used right now (e.g. still downloading), [message] says why */
+        /** The AI can't be used right now (e.g. still downloading), [message] says why */
         data class Unavailable(val message: String) : Result
     }
 
+    /** What the model asked for in one reply */
+    internal sealed interface Reply {
+        data class Cmd(val text: String) : Reply
+        data class Say(val text: String) : Reply
+        data class Search(val query: String) : Reply
+    }
+
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val gemini = GeminiClient(okHttpClient)
+    private val web = WebLookup(okHttpClient)
+
+    // last few cloud exchanges, so that "and what about tomorrow?" works
+    private val history = ArrayDeque<GeminiClient.Turn>()
+    private var lastExchangeMillis = 0L
+
     private val modelDir = File(appContext.filesDir, "ai")
     private val modelFile = File(modelDir, MODEL_FILE_NAME)
 
@@ -72,7 +100,67 @@ class AiBrain @Inject constructor(
     private var engine: Engine? = null
     private var releaseJob: Job? = null
 
-    /** Starts downloading the model in the background, if it isn't there yet. */
+    suspend fun interpret(userInput: String): Result {
+        val apiKey = dataStore.data.first().geminiApiKey.trim()
+        if (apiKey.isNotEmpty()) {
+            try {
+                return interpretWithCloud(apiKey, userInput)
+            } catch (e: GeminiClient.ApiException) {
+                Log.e(TAG, "Gemini error ${e.code}", e)
+                when (e.code) {
+                    400, 401, 403 -> return Result.Unavailable(
+                        "My cloud brain rejected the API key. Please check it in settings."
+                    )
+                    // 429 (free quota used up) and server errors: use the phone's model instead
+                }
+            } catch (e: IOException) {
+                Log.w(TAG, "Cloud brain unreachable, using the local one", e)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Cloud brain failed, using the local one", e)
+            }
+        }
+        return interpretLocally(userInput)
+    }
+
+    /* ---------------------------------- CLOUD ---------------------------------- */
+
+    private suspend fun interpretWithCloud(apiKey: String, userInput: String): Result {
+        if (System.currentTimeMillis() - lastExchangeMillis > HISTORY_TIMEOUT_MILLIS) {
+            history.clear() // a new conversation, old context would only confuse the model
+        }
+        val turns = history.toMutableList()
+        turns.add(GeminiClient.Turn(true, userInput))
+
+        var raw = gemini.generate(apiKey, systemPrompt(), turns)
+        var reply = parseReply(raw)
+        if (reply is Reply.Search) {
+            val results = web.search(reply.query)
+            turns.add(GeminiClient.Turn(false, raw.trim()))
+            turns.add(GeminiClient.Turn(true, searchResultsMessage(reply.query, results)))
+            raw = gemini.generate(apiKey, systemPrompt(), turns)
+            reply = parseReply(raw)
+        }
+
+        val result = reply.toResult()
+        val remembered = when (result) {
+            is Result.Answer -> "SAY: ${result.text}"
+            is Result.Command -> "CMD: ${result.text}"
+            is Result.Unavailable -> null
+        }
+        if (remembered != null) {
+            history.addLast(GeminiClient.Turn(true, userInput))
+            history.addLast(GeminiClient.Turn(false, remembered))
+            while (history.size > MAX_HISTORY_TURNS) history.removeFirst()
+            lastExchangeMillis = System.currentTimeMillis()
+        }
+        return result
+    }
+
+    /* ---------------------------------- LOCAL ---------------------------------- */
+
+    /** Starts downloading the on-phone model in the background, if it isn't there yet. */
     fun startDownload() {
         val s = _status.value
         if (s is Status.Downloading || s is Status.Ready) return
@@ -94,20 +182,20 @@ class AiBrain @Inject constructor(
         }
     }
 
-    suspend fun interpret(userInput: String): Result {
+    private suspend fun interpretLocally(userInput: String): Result {
         when (val s = _status.value) {
             Status.NotDownloaded, is Status.ErrorDownloading -> {
                 startDownload()
                 return Result.Unavailable(
-                    "I didn't get that. I'm downloading my AI brain (about 1 GB) so I can " +
-                        "understand more; it works offline once it's done."
+                    "I didn't get that. For smarter answers, add a free Gemini API key in " +
+                        "settings. Meanwhile I'm downloading my offline brain (about 1 GB)."
                 )
             }
             is Status.Downloading -> {
                 val percent = if (s.progress.totalBytes > 0) {
                     " (${s.progress.currentBytes * 100 / s.progress.totalBytes}%)"
                 } else ""
-                return Result.Unavailable("I didn't get that. My AI brain is still downloading$percent.")
+                return Result.Unavailable("I didn't get that. My offline brain is still downloading$percent.")
             }
             Status.Ready -> {}
         }
@@ -117,21 +205,32 @@ class AiBrain @Inject constructor(
                 releaseJob?.cancel()
                 try {
                     val eng = engine ?: loadEngine().also { engine = it }
-                    val reply = eng.createConversation(
+                    eng.createConversation(
                         ConversationConfig(
-                            systemInstruction = Contents.of(SYSTEM_PROMPT),
+                            systemInstruction = Contents.of(systemPrompt()),
                             samplerConfig = SamplerConfig(topK = 1, topP = 0.95, temperature = 0.2),
                         )
                     ).use { conversation ->
                         // "/no_think" turns off Qwen3's slow step-by-step reasoning
-                        conversation.sendMessage("$userInput /no_think").toString()
+                        var reply = parseReply(
+                            conversation.sendMessage("$userInput /no_think").toString()
+                        )
+                        if (reply is Reply.Search) {
+                            val results = web.search(reply.query)
+                            reply = parseReply(
+                                conversation.sendMessage(
+                                    searchResultsMessage(reply.query, results) + " /no_think"
+                                ).toString()
+                            )
+                        }
+                        reply.toResult()
                     }
-                    Log.d(TAG, "AI reply for \"$userInput\": $reply")
-                    parseReply(reply)
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
-                    Log.e(TAG, "AI brain failed", e)
-                    Result.Unavailable("Sorry, my AI brain hit an error: ${e.message ?: e.javaClass.simpleName}")
+                    Log.e(TAG, "Local AI brain failed", e)
+                    Result.Unavailable(
+                        "Sorry, my offline brain hit an error: ${e.message ?: e.javaClass.simpleName}"
+                    )
                 } finally {
                     scheduleRelease()
                 }
@@ -162,7 +261,7 @@ class AiBrain @Inject constructor(
         throw lastError ?: IllegalStateException("Could not load the AI model")
     }
 
-    /** Frees the ~1.5 GB of RAM the model uses after a few idle minutes. */
+    /** Frees the ~1.5 GB of RAM the local model uses after a few idle minutes. */
     private fun scheduleRelease() {
         releaseJob = scope.launch {
             delay(IDLE_RELEASE_MILLIS)
@@ -173,45 +272,78 @@ class AiBrain @Inject constructor(
         }
     }
 
+    /* --------------------------------- SHARED ---------------------------------- */
+
+    private fun systemPrompt(): String {
+        val now = SimpleDateFormat("EEEE d MMMM yyyy, h:mm a", Locale.ENGLISH).format(Date())
+        return SYSTEM_PROMPT_TEMPLATE
+            .replace("{NOW}", now)
+            .replace("{TIMEZONE}", TimeZone.getDefault().id)
+    }
+
+    private fun searchResultsMessage(query: String, results: String) =
+        "Search results for \"$query\":\n$results\n\n" +
+            "Using these results, answer my previous request with a single SAY line."
+
+    private fun Reply.toResult(): Result = when (this) {
+        is Reply.Cmd -> Result.Command(text)
+        is Reply.Say -> Result.Answer(text)
+        // a second search is not allowed, so the model gave up
+        is Reply.Search -> Result.Answer("Sorry, I couldn't find anything about that.")
+    }
+
     companion object {
         private val TAG = AiBrain::class.simpleName
         private const val MODEL_FILE_NAME = "Qwen3-1.7B_dynamic_wi4b32_afp32.litertlm"
         private const val MODEL_URL =
             "https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/$MODEL_FILE_NAME"
-        private const val MAX_TOKENS = 1536
+        private const val MAX_TOKENS = 2048
         private const val IDLE_RELEASE_MILLIS = 5 * 60 * 1000L
+        private const val MAX_HISTORY_TURNS = 12
+        private const val HISTORY_TIMEOUT_MILLIS = 10 * 60 * 1000L
 
         private val THINK_BLOCK = Regex("""<think>[\s\S]*?</think>""")
-        private val PREFIX = Regex("""^\s*(CMD|SAY)\s*:\s*""", RegexOption.IGNORE_CASE)
+        private val PREFIX = Regex("""^\W*(CMD|SAY|SEARCH)\s*:\s*""", RegexOption.IGNORE_CASE)
 
-        internal fun parseReply(raw: String): Result {
-            val text = raw.replace(THINK_BLOCK, "").replace("<think>", "").replace("</think>", "").trim()
-            val line = text.lines().map { it.trim() }.firstOrNull { PREFIX.containsMatchIn(it) }
-            if (line != null) {
+        internal fun parseReply(raw: String): Reply {
+            val text = raw.replace(THINK_BLOCK, "")
+                .replace("<think>", "").replace("</think>", "").trim()
+            val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+            val index = lines.indexOfFirst { PREFIX.containsMatchIn(it) }
+            if (index >= 0) {
+                val line = lines[index]
                 val kind = PREFIX.find(line)!!.groupValues[1].uppercase()
-                val body = line.replace(PREFIX, "").trim().trim('"')
-                if (kind == "CMD" && body.isNotEmpty()) {
-                    // same normalization as speech input, so the skills match it
-                    return Result.Command(
-                        body.lowercase()
-                            .replace(Regex("""[^\p{L}\p{N}'\s-]"""), " ")
-                            .replace(Regex("""\s+"""), " ")
-                            .trim()
-                    )
+                // SAY answers may continue on the next lines
+                val body = (listOf(line.replace(PREFIX, "")) + lines.drop(index + 1)
+                    .takeWhile { !PREFIX.containsMatchIn(it) && kind == "SAY" })
+                    .joinToString(" ")
+                    .replace("*", "")
+                    .trim().trim('"')
+                if (body.isNotEmpty()) {
+                    return when (kind) {
+                        "CMD" -> Reply.Cmd(
+                            // same normalization as speech input, so the skills match it
+                            body.lowercase()
+                                .replace(Regex("""[^\p{L}\p{N}'\s-]"""), " ")
+                                .replace(Regex("""\s+"""), " ")
+                                .trim()
+                        )
+                        "SEARCH" -> Reply.Search(body)
+                        else -> Reply.Say(body)
+                    }
                 }
-                if (body.isNotEmpty()) return Result.Answer(body)
             }
-            return if (text.isNotEmpty()) Result.Answer(text) else Result.Unavailable("Sorry, I didn't get that.")
+            return Reply.Say(text.replace("*", "").ifEmpty { "Sorry, I didn't get that." })
         }
 
-        private val SYSTEM_PROMPT = """
-            You are Mello, a friendly voice assistant on the user's Android phone. The user's words
-            were transcribed from speech and may contain small mistakes. Reply with exactly ONE line,
-            in one of these two forms:
+        private val SYSTEM_PROMPT_TEMPLATE = """
+            You are Mello, a friendly, smart voice assistant on the user's Android phone.
+            Right now it is {NOW} (time zone {TIMEZONE}). The user's words were transcribed from
+            speech and may contain small mistakes; guess what they meant. Reply with exactly ONE of:
 
             CMD: <command>
-              Use this when the user wants the phone to do something. Rewrite the request as one of
-              these commands, filling in the <...> parts:
+              When the user wants the phone to do something. Rewrite the request as one of these
+              commands, filling in the <...> parts and keeping names exactly as the user said them:
               play <song, artist, album or playlist> on spotify
               pause the music | resume the music | next song | previous song
               open <app name>
@@ -219,29 +351,36 @@ class AiBrain @Inject constructor(
               call <contact name>
               navigate to <place>
               what is the weather in <city>
-              what time is it
-              search <query>
               turn on the flashlight | turn off the flashlight
               calculate <math expression>
               translate <text> to <language>
-              lyrics of <song>
               tell me a joke
 
+            SEARCH: <search query>
+              When the answer needs current or real-time information: news, sports scores, prices,
+              stock or crypto values, recent events, new releases, anything that may have changed
+              recently. You will get search results back, then answer with SAY.
+
             SAY: <answer>
-              Use this for questions, chatting, or anything no command fits. Answer in at most two
-              short sentences, written to be spoken aloud: no lists, no markdown, no emojis.
+              For everything else: questions, chatting, advice. Answer in at most three short
+              sentences written to be spoken aloud: no lists, no markdown, no emojis. For news,
+              give the two or three most important headlines in one sentence each.
 
             Examples:
             User: can you put on some arijit singh
             CMD: play arijit singh on spotify
             User: i need to leave in 10 minutes remind me
             CMD: set a timer for 10 minutes
+            User: phone amma
+            CMD: call amma
             User: whatsapp kholo
             CMD: open whatsapp
+            User: what's the latest news
+            SEARCH: top news today India
+            User: who won the match yesterday
+            SEARCH: cricket match result yesterday
             User: how far is the moon
             SAY: The moon is about 384,000 kilometres away from Earth.
-            User: thanks mello
-            SAY: Anytime!
         """.trimIndent()
     }
 }

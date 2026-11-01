@@ -121,6 +121,17 @@ private fun MainSettingsScreen(
             )
         }
 
+        /* AI BRAIN */
+        item { SettingsCategoryTitle(stringResource(R.string.pref_ai)) }
+        item {
+            // never show the whole key on screen
+            val key = settings.geminiApiKey
+            val masked = if (key.isEmpty()) "" else "\u2022\u2022\u2022\u2022" + key.takeLast(4)
+            geminiApiKey().Render(masked) { newValue ->
+                if (newValue != masked) viewModel.setGeminiApiKey(newValue)
+            }
+        }
+
         /* INPUT AND OUTPUT METHODS */
         item { SettingsCategoryTitle(stringResource(R.string.pref_io)) }
         item {

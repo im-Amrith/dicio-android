@@ -41,7 +41,7 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         ndk {
-            abiFilters += arrayOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            abiFilters += arrayOf("arm64-v8a") // the Galaxy S23 is arm64; other ABIs only made the APK bigger
         }
     }
 

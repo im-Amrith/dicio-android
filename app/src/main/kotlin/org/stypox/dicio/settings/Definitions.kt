@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.KeyboardAlt
 import androidx.compose.material.icons.filled.Language
@@ -177,6 +178,14 @@ fun speechOutputDevice() = ListSetting(
             name = stringResource(R.string.pref_speech_output_method_nothing),
         ),
     ),
+)
+
+@Composable
+fun geminiApiKey() = org.stypox.dicio.settings.ui.StringSetting(
+    title = stringResource(R.string.pref_gemini_key_title),
+    icon = Icons.Default.Key,
+    description = stringResource(R.string.pref_gemini_key_set),
+    descriptionWhenEmpty = stringResource(R.string.pref_gemini_key_empty),
 )
 
 @Composable

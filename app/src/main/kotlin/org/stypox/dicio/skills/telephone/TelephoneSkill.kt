@@ -23,6 +23,22 @@ class TelephoneSkill(
             is Telephone.Dial -> inputData.who?.trim { it <= ' ' } ?: ""
         }
         val contacts = Contact.getFilteredSortedContacts(contentResolver, userContactName)
+
+        // A contact whose name is exactly what the user said (e.g. "Amma", ignoring case, spaces,
+        // emojis and punctuation) wins outright, even if other names contain it ("Ammachi"):
+        // call it right away instead of asking which one was meant.
+        val wanted = normalizeName(userContactName)
+        if (wanted.isNotEmpty()) {
+            val exact = contacts.filter { normalizeName(it.name) == wanted }
+            val exactWithNumbers = exact.map { Pair(it, it.getNumbers(contentResolver)) }
+                .filter { it.second.isNotEmpty() }
+            if (exactWithNumbers.size == 1) {
+                val number = exactWithNumbers[0].second[0]
+                call(ctx.android, number)
+                return ConfirmedCallOutput(number)
+            }
+        }
+
         val validContacts = ArrayList<Pair<String, List<String>>>()
 
         var i = 0
@@ -62,6 +78,10 @@ class TelephoneSkill(
     }
 
     companion object {
+        private val NOT_LETTER_OR_DIGIT = Regex("""[^\p{L}\p{N}]""")
+
+        fun normalizeName(name: String): String = name.lowercase().replace(NOT_LETTER_OR_DIGIT, "")
+
         fun call(context: Context, number: String?) {
             val callIntent = Intent(Intent.ACTION_CALL)
             callIntent.data = Uri.parse("tel:$number")

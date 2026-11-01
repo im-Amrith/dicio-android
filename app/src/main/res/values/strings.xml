@@ -201,14 +201,14 @@
     <string name="wake_service_label">Mello wake word service</string>
     <string name="wake_service_foreground_notification_summary">This notification allows the Mello
         wake word service to listen to the microphone in the background</string>
-    <string name="wake_service_foreground_notification">Listening for the \"Hey Dicio\" wake-up word</string>
+    <string name="wake_service_foreground_notification">Listening for your wake word</string>
     <string name="wake_custom_service_foreground_notification">Listening for custom wake-up word</string>
     <string name="wake_service_start_notification">Tap to start Mello wake word service</string>
     <string name="wake_service_triggered_notification">Mello wake word triggered, tap to open</string>
     <string name="wake_service_start_notification_summary">In Android 11+ Mello can\'t start the service without a manual interaction from the user.</string>
     <string name="wake_service_triggered_notification_summary">In Android 10+ Mello can\'t start when a wake word is detected without showing a notification.</string>
     <string name="wake_word_setup_title">Setup wake word</string>
-    <string name="wake_word_setup_description">Mello will wake up automatically whenever you say \"Hey Dicio\".
+    <string name="wake_word_setup_description">Mello will wake up automatically whenever you say your wake word.
         This works by starting a service that always listens in the background.
         All speech processing happens locally, that\'s why you need to download the AI model in advance.</string>
     <string name="wake_word_error_downloading">An unexpected error occurred while downloading</string>
@@ -286,8 +286,12 @@
     <string name="skill_name_music">Spotify music</string>
     <string name="skill_sentence_example_music">Play Believer on Spotify</string>
     <string name="skill_music_playing">Playing %1$s on Spotify</string>
-    <string name="skill_music_searching">Searching Spotify for %1$s</string>
+    <string name="skill_music_searching">Opened Spotify search for %1$s, but Spotify did not start playing</string>
     <string name="skill_music_not_installed">Spotify is not installed</string>
     <string name="skill_music_no_query">What should I play?</string>
     <string name="ai_brain_name">AI brain</string>
+    <string name="pref_ai">AI brain</string>
+    <string name="pref_gemini_key_title">Gemini API key (cloud AI)</string>
+    <string name="pref_gemini_key_empty">Not set: only the offline AI is used. Get a free key at aistudio.google.com</string>
+    <string name="pref_gemini_key_set">Cloud AI on, with web search</string>
 </resources>
