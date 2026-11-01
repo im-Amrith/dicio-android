@@ -177,7 +177,8 @@ dependencies {
     implementation(files(sherpaOnnxAar))
 
     // On-device LLM ("AI brain") through Google's LiteRT-LM
-    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
+    // pinned: newer releases are built with Kotlin 2.4, which this project's Kotlin 2.2 can't read
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.9.0")
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
