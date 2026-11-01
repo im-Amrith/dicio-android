@@ -14,6 +14,9 @@ import kotlinx.coroutines.withContext
 import org.dicio.skill.skill.InteractionPlan
 import org.dicio.skill.skill.Permission
 import org.dicio.skill.skill.SkillOutput
+import org.stypox.dicio.ai.AiAnswerOutput
+import org.stypox.dicio.ai.AiBrain
+import org.stypox.dicio.ai.AiInfo
 import org.stypox.dicio.di.SkillContextInternal
 import org.stypox.dicio.di.SttInputDeviceWrapper
 import org.stypox.dicio.io.graphical.ErrorSkillOutput
@@ -38,6 +41,7 @@ class SkillEvaluatorImpl(
     private val skillContext: SkillContextInternal,
     private val skillHandler: SkillHandler,
     private val sttInputDevice: SttInputDeviceWrapper,
+    private val aiBrain: AiBrain,
 ) : SkillEvaluator {
 
     private val scope = CoroutineScope(Dispatchers.Default)
@@ -95,22 +99,48 @@ class SkillEvaluatorImpl(
         }
     }
 
-    private suspend fun evaluateMatchingSkill(utterances: List<String>) {
-        val (chosenInput, chosenSkill) = try {
-            utterances.firstNotNullOfOrNull { input: String ->
+    /**
+     * Returns the input and the best skill matching it, or null if no skill understood any of the
+     * [utterances].
+     */
+    private fun findBestSkill(utterances: List<String>): Pair<String, SkillWithResult<*>>? {
+        try {
+            return utterances.firstNotNullOfOrNull { input: String ->
                 skillContext.standardMatchHelper = MatchHelper(skillContext.parserFormatter, input)
                 skillRanker.getBest(skillContext, input)?.let { skillWithResult ->
                     Pair(input, skillWithResult)
                 }
-            } ?: Pair(utterances[0], skillRanker.getFallbackSkill(skillContext, utterances[0]))
-        } catch (throwable: Throwable) {
-            addErrorInteractionFromPending(throwable)
-            return
+            }
         } finally {
             // standardMatchHelper only needs to be set while calling score() on skills, so once
             // all matching and scoring is done, free up the memory it uses (which may be
             // significant since the purpose of MatchHelper is to cache information about the input)
             skillContext.standardMatchHelper = null
+        }
+    }
+
+    private suspend fun evaluateMatchingSkill(utterances: List<String>) {
+        val (chosenInput, chosenSkill) = try {
+            findBestSkill(utterances) ?: run {
+                // none of the skills understood: ask the AI brain to interpret the request
+                _state.value = _state.value.copy(
+                    pendingQuestion = _state.value.pendingQuestion?.copy(skillBeingEvaluated = AiInfo)
+                )
+                when (val ai = aiBrain.interpret(utterances[0])) {
+                    is AiBrain.Result.Command -> findBestSkill(listOf(ai.text))
+                    is AiBrain.Result.Answer -> {
+                        respondWithAi(ai.text)
+                        return
+                    }
+                    is AiBrain.Result.Unavailable -> {
+                        respondWithAi(ai.message)
+                        return
+                    }
+                }
+            } ?: Pair(utterances[0], skillRanker.getFallbackSkill(skillContext, utterances[0]))
+        } catch (throwable: Throwable) {
+            addErrorInteractionFromPending(throwable)
+            return
         }
         val skillInfo = chosenSkill.skill.correspondingSkillInfo
 
@@ -179,6 +209,15 @@ class SkillEvaluatorImpl(
         }
     }
 
+    private suspend fun respondWithAi(text: String) {
+        val output = AiAnswerOutput(text)
+        addInteractionFromPending(output)
+        skillRanker.removeAllBatches()
+        withContext(Dispatchers.Main) {
+            skillContext.speechOutputDevice.speak(output.getSpeechOutput(skillContext))
+        }
+    }
+
     private fun addErrorInteractionFromPending(throwable: Throwable) {
         Log.e(TAG, "Error while evaluating skills", throwable)
         addInteractionFromPending(ErrorSkillOutput(throwable, true))
@@ -226,7 +265,8 @@ class SkillEvaluatorModule {
         skillContext: SkillContextInternal,
         skillHandler: SkillHandler,
         sttInputDevice: SttInputDeviceWrapper,
+        aiBrain: AiBrain,
     ): SkillEvaluator {
-        return SkillEvaluatorImpl(skillContext, skillHandler, sttInputDevice)
+        return SkillEvaluatorImpl(skillContext, skillHandler, sttInputDevice, aiBrain)
     }
 }

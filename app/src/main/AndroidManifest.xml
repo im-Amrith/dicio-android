@@ -39,6 +39,11 @@
         tools:ignore="GoogleAppIndexingWarning"
         android:dataExtractionRules="@xml/data_extraction_rules">
 
+        <!-- lets the AI brain run on the GPU (OpenCL), when the phone supports it -->
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
+        <uses-native-library android:name="libvndksupport.so" android:required="false" />
+
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,0 +1,7 @@
+query:
+  - play|(put on)|start|blast|queue .query. on|in|from|with|using|via spotify
+  - spotify play .query.
+  - (open spotify and)|(go to spotify and) play .query.
+  - play|(put on)|blast .query.
+  - i want to listen to .query.
+  - (let s|me)|lets listen to .query.

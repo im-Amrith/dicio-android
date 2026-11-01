@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.stypox.dicio.BuildConfig
 import org.stypox.dicio.R
+import androidx.compose.ui.draw.clip
 import org.stypox.dicio.error.ErrorActivity
 import org.stypox.dicio.settings.ui.SettingsItem
 import org.stypox.dicio.ui.theme.AppTheme
@@ -73,11 +74,22 @@ fun AboutScreen(
                         .wrapContentSize(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Image(
-                        imageVector = DicioSquircleIcon,
-                        contentDescription = stringResource(R.string.app_name),
-                        modifier = Modifier.size(64.dp)
-                    )
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .then(Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)))
+                    ) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.mello_icon_background),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.mello_icon_foreground),
+                            contentDescription = stringResource(R.string.app_name),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = stringResource(R.string.app_name),

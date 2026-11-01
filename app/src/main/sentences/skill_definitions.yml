@@ -134,3 +134,11 @@ skills:
             type: string
           - id: target
             type: string
+
+  - id: music
+    specificity: medium
+    sentences:
+      - id: query
+        captures:
+          - id: query
+            type: string

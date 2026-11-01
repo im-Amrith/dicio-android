@@ -30,17 +30,29 @@ android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.stypox.dicio"
+        applicationId = "com.mello.assistant"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 19
-        versionName = "4.2"
+        // increases with every GitHub build, so the phone always accepts the update
+        versionCode = 1000 + (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0)
+        versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "local")
         testInstrumentationRunner = "org.stypox.dicio.CustomTestRunner"
 
         vectorDrawables.useSupportLibrary = true
 
         ndk {
             abiFilters += arrayOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+    }
+
+    // Personal-use signing key, committed on purpose so every GitHub build is signed the same way
+    // and installs as an update over the previous one.
+    signingConfigs {
+        create("mello") {
+            storeFile = file("mello.keystore")
+            storePassword = "mellopass"
+            keyAlias = "mello"
+            keyPassword = "mellopass"
         }
     }
 
@@ -54,10 +66,11 @@ android {
                 ?.contains("creenshot") == true
             if (!isScreenshotTest) {
                 // only change the app name if we are not taking screenshots
-                resValue("string", "app_name", "Dicio-${gitBranch()}")
+                resValue("string", "app_name", "Mello-dev")
             }
         }
         release {
+            signingConfig = signingConfigs.getByName("mello")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -77,6 +90,18 @@ android {
             // Just to opt in to future behavior and fix a warning; remove once the future behavior
             // becomes the default behavior. This is about @Annotations on data class fields.
             freeCompilerArgs = listOf("-Xannotation-default-target=param-property")
+        }
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+
+    packaging {
+        jniLibs {
+            // several native AI libraries ship their own copy of these
+            pickFirsts += setOf("**/libc++_shared.so", "**/libLiteRt*.so", "**/libtensorflowlite*.so")
         }
     }
 
@@ -150,6 +175,9 @@ if (!sherpaOnnxAar.exists()) {
 dependencies {
     // Whisper speech to text through sherpa-onnx (includes the Kotlin API and native libs)
     implementation(files(sherpaOnnxAar))
+
+    // On-device LLM ("AI brain") through Google's LiteRT-LM
+    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
