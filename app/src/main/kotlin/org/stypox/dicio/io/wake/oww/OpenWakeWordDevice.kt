@@ -104,10 +104,13 @@ class OpenWakeWordDevice(
         }
 
         for (i in 0..<OwwModel.MEL_INPUT_COUNT) {
-            audio[i] = audio16bitPcm[i].toFloat() / 32768.0f
+            // openWakeWord feeds the raw 16-bit sample values (not scaled to -1..1) to its
+            // melspectrogram model, and all wake word models are trained on features computed
+            // that way: scaling here made every model hear audio ~32768x too quiet
+            audio[i] = audio16bitPcm[i].toFloat()
         }
 
-        return model!!.processFrame(audio) > 0.8f
+        return model!!.processFrame(audio) > DETECTION_THRESHOLD
     }
 
     override fun frameSize(): Int {
@@ -126,6 +129,8 @@ class OpenWakeWordDevice(
 
     companion object {
         val TAG = OpenWakeWordDevice::class.simpleName
+        // openWakeWord's own default; 0.8 was too strict for custom-trained models
+        private const val DETECTION_THRESHOLD = 0.5f
         const val MEL_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.tflite"
         const val EMB_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.tflite"
         const val WAKE_URL = "https://github.com/Stypox/dicio-android/releases/download/v2.0/hey_dicio_v6.0.tflite"
