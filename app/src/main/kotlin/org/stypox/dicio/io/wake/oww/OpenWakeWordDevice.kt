@@ -110,7 +110,9 @@ class OpenWakeWordDevice(
             audio[i] = audio16bitPcm[i].toFloat()
         }
 
-        return model!!.processFrame(audio) > DETECTION_THRESHOLD
+        val score = model!!.processFrame(audio)
+        lastScore = score
+        return score > DETECTION_THRESHOLD
     }
 
     override fun frameSize(): Int {
@@ -130,7 +132,11 @@ class OpenWakeWordDevice(
     companion object {
         val TAG = OpenWakeWordDevice::class.simpleName
         // openWakeWord's own default; 0.8 was too strict for custom-trained models
-        private const val DETECTION_THRESHOLD = 0.5f
+        const val DETECTION_THRESHOLD = 0.5f
+
+        /** The most recent wake word score (0..1), shown in the notification for testing. */
+        @Volatile
+        var lastScore = 0f
         const val MEL_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.tflite"
         const val EMB_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.tflite"
         const val WAKE_URL = "https://github.com/Stypox/dicio-android/releases/download/v2.0/hey_dicio_v6.0.tflite"

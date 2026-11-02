@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import org.stypox.dicio.MainActivity
 import org.stypox.dicio.MainActivity.Companion.ACTION_WAKE_WORD
 import org.stypox.dicio.R
+import org.stypox.dicio.io.wake.oww.OpenWakeWordDevice
 import org.stypox.dicio.di.SttInputDeviceWrapper
 import org.stypox.dicio.di.WakeDeviceWrapper
 import org.stypox.dicio.eval.SkillEvaluator
@@ -146,7 +147,7 @@ class WakeService : Service() {
         }
     }
 
-    private fun createForegroundNotification(isHeyDicio: Boolean) {
+    private fun createForegroundNotification(isHeyDicio: Boolean, scoreText: String? = null) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 FOREGROUND_NOTIFICATION_CHANNEL_ID,
@@ -165,6 +166,8 @@ class WakeService : Service() {
                     else R.string.wake_custom_service_foreground_notification
                 )
             )
+            .setContentText(scoreText)
+            .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setShowWhen(false)
@@ -182,7 +185,42 @@ class WakeService : Service() {
             ))
             .build()
 
-        startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+        if (scoreText == null) {
+            startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+        } else {
+            notificationManager.notify(FOREGROUND_NOTIFICATION_ID, notification)
+        }
+    }
+
+    /**
+     * Shows in the notification the highest score heard in the last couple of seconds, so it's
+     * possible to see how close "hey mello" gets to triggering.
+     */
+    private var peakScore = 0f
+    private var lastScoreUpdate = Instant.MIN
+    private var shownPeak = -1f
+
+    private fun updateScoreNotification() {
+        peakScore = maxOf(peakScore, OpenWakeWordDevice.lastScore)
+        val now = Instant.now()
+        if (now < lastScoreUpdate.plusMillis(SCORE_UPDATE_MILLIS)) return
+        lastScoreUpdate = now
+        val peak = (peakScore * 100).toInt() / 100f
+        peakScore = 0f
+        if (peak == shownPeak) return
+        shownPeak = peak
+        try {
+            createForegroundNotification(
+                wakeDevice.isHeyDicio.value,
+                getString(
+                    R.string.wake_service_score,
+                    (peak * 100).toInt(),
+                    (OpenWakeWordDevice.DETECTION_THRESHOLD * 100).toInt(),
+                ),
+            )
+        } catch (t: Throwable) {
+            Log.w(TAG, "Could not update wake word score notification", t)
+        }
     }
 
     private fun listenForWakeWord() {
@@ -214,6 +252,7 @@ class WakeService : Service() {
                 }
 
                 lastHeard.set(Instant.now())
+                updateScoreNotification()
             }
         } finally {
             ar.stop()
@@ -364,6 +403,7 @@ class WakeService : Service() {
         private const val START_NOTIFICATION_ID = 48019274
         private const val TRIGGERED_NOTIFICATION_ID = 601398647
         private const val WAKE_WORD_BACKOFF_MILLIS = 4000L
+        private const val SCORE_UPDATE_MILLIS = 1500L
         private const val ACTION_STOP_WAKE_SERVICE =
             "org.stypox.dicio.io.wake.WakeService.ACTION_STOP"
         private const val RELEASE_STT_RESOURCES_MILLIS = 1000L * 60 * 5 // 5 minutes
