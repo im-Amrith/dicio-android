@@ -1,5 +1,17 @@
 package org.stypox.dicio.ui.home
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.scale
 import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -99,18 +111,44 @@ private fun SttFabImpl(state: SttState, onClick: () -> Unit, modifier: Modifier 
         }
     }
 
-    ExtendedFloatingActionButton(
-        text = {
-            Text(
-                text = lastNonEmptyText,
-                textAlign = TextAlign.Center,
-            )
-        },
-        icon = { SttFabIcon(state, contentDescription = text) },
-        onClick = onClick,
-        expanded = text.isNotEmpty(),
-        modifier = modifier,
+    // The one moving thing in the app: while Jarvis listens, a brass ring breathes around the mic
+    val shape = RoundedCornerShape(28.dp)
+    val listening = state == Listening
+    val transition = rememberInfiniteTransition(label = "listening")
+    val ringScale by transition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.16f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "ringScale",
     )
+
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+        if (listening) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .scale(ringScale)
+                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f), shape)
+            )
+        }
+        ExtendedFloatingActionButton(
+            text = {
+                Text(
+                    text = lastNonEmptyText,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            icon = { SttFabIcon(state, contentDescription = text) },
+            onClick = onClick,
+            expanded = text.isNotEmpty(),
+            shape = shape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        )
+    }
 }
 
 @Composable

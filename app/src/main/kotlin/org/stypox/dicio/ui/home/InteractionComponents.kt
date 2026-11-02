@@ -1,5 +1,11 @@
 package org.stypox.dicio.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -88,7 +94,7 @@ fun InteractionList(
 
     LazyColumn(
         modifier = modifier.testTag("interaction_list"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         state = listState,
     ) {
         countedItem(canBeAnchor = false) {
@@ -202,86 +208,103 @@ fun InteractionListPreview(
     }
 }
 
+/** What the user is saying right now: their words on the right, in the plain interface face. */
 @Preview
 @Composable
 fun PendingQuestionCard(@PreviewParameter(UserInputPreviews::class) userInput: String) {
-    MessageCard(containerColor = MaterialTheme.colorScheme.tertiaryContainer) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-            )
-            Text(
-                text = userInput,
-                fontStyle = FontStyle.Italic,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
-            )
-        }
-    }
+    UserLine(userInput = userInput, pending = true, onClick = null)
 }
 
+/** What the user said; tapping it puts the words back in the text box to edit them. */
 @Preview
 @Composable
 fun ConfirmedQuestionCard(
     @PreviewParameter(UserInputPreviews::class) userInput: String,
     onClick: (String) -> Unit = {},
 ) {
-    MessageCard(
-        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-        onClick = { onClick(userInput) },
+    UserLine(userInput = userInput, pending = false, onClick = { onClick(userInput) })
+}
+
+@Composable
+private fun UserLine(userInput: String, pending: Boolean, onClick: (() -> Unit)?) {
+    Row(
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 56.dp, end = 16.dp),
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(12.dp),
+        val shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
+        Box(
+            modifier = Modifier
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-            )
             Text(
                 text = userInput,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyLarge,
+                fontStyle = if (pending) FontStyle.Italic else FontStyle.Normal,
+                color = if (pending) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurface,
             )
         }
     }
 }
 
+/** Jarvis is working on it: the brass rule is already there, with the skill being used. */
 @Preview
 @Composable
 fun LoadingAnswerCard(@PreviewParameter(SkillInfoPreviews::class) skill: SkillInfo) {
-    MessageCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+    JarvisLine {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(vertical = 6.dp),
         ) {
             Icon(
                 painter = skill.icon(),
                 contentDescription = null,
-                tint = ProgressIndicatorDefaults.circularColor,
-                modifier = Modifier.size(40.dp)
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
 
+/** Jarvis's answer: left aligned, no box, marked by a thin brass rule. */
 @Composable
 fun SkillAnswerCard(content: @Composable BoxScope.() -> Unit) {
-    MessageCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+    JarvisLine {
         Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier.fillMaxWidth(),
             content = content,
         )
+    }
+}
+
+@Composable
+private fun JarvisLine(content: @Composable () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(start = 16.dp, end = 32.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Box(modifier = Modifier.weight(1f)) { content() }
     }
 }
 
@@ -299,10 +322,10 @@ fun MessageCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = CardDefaults.cardColors(containerColor = containerColor)
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     val modifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 8.dp)
+        .padding(horizontal = 16.dp)
     if (onClick == null) {
         Card(colors = colors, modifier = modifier, content = content)
     } else {

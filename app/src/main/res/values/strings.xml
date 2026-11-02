@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name" translatable="false">Mello</string>
+    <string name="app_name" translatable="false">Jarvis</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="drawer_header_subtitle">May I help you?</string>
@@ -28,9 +28,9 @@
     <string name="start_listening">Start listening</string>
     <string name="downloaded">Downloaded</string>
     <string name="loaded">Loaded</string>
-    <string name="here_is_what_i_can_do">Here is what I can do!</string>
+    <string name="here_is_what_i_can_do">Good to see you. Try saying</string>
     <string name="all_skills_disabled_title">All skills are disabled</string>
-    <string name="all_skills_disabled_description">Please enable some skills from settings, otherwise Mello will not be able to do anything</string>
+    <string name="all_skills_disabled_description">Please enable some skills from settings, otherwise Jarvis will not be able to do anything</string>
     <string name="action_text_input">Text input</string>
     <string name="action_voice_input">Voice input</string>
     <string name="microphone_error">Unable to access microphone, it is probably already in use or the relevant permission was denied.</string>
@@ -54,7 +54,7 @@
     <string name="error_github_notice">Please check whether an issue discussing your crash already exists. When creating duplicate tickets, you take time from us which we could spend with fixing the actual bug.</string>
     <string name="error_copy_formatted">Copy formatted report</string>
     <string name="error_report_github">Report on GitHub</string>
-    <string name="error_report_notification_title">Mello encountered an error, tap to report</string>
+    <string name="error_report_notification_title">Jarvis encountered an error, tap to report</string>
     <string name="error_report_notification_toast">An error occurred, see the notification</string>
     <string name="error_report_channel_name">Error report notification</string>
     <string name="error_report_channel_description">Notifications to report errors</string>
@@ -74,31 +74,31 @@
     <string name="pref_theme_dark">Dark</string>
     <string name="pref_theme_black">Black</string>
     <string name="pref_language">Language</string>
-    <string name="pref_language_summary">What language should Mello use to listen to you and provide answers?</string>
+    <string name="pref_language_summary">What language should Jarvis use to listen to you and provide answers?</string>
     <string name="pref_language_system">Use system language</string>
     <string name="pref_input_method">Input method</string>
-    <string name="pref_input_method_summary">Choose the service to use to talk to Mello</string>
+    <string name="pref_input_method_summary">Choose the service to use to talk to Jarvis</string>
     <string name="pref_input_method_text">Only text box</string>
     <string name="pref_input_method_vosk">Vosk offline speech recognition</string>
-    <string name="pref_input_method_vosk_summary">Downloads and runs a Vosk SpeechToText model offline inside Mello</string>
+    <string name="pref_input_method_vosk_summary">Downloads and runs a Vosk SpeechToText model offline inside Jarvis</string>
     <string name="pref_input_method_whisper">Whisper offline speech recognition</string>
     <string name="pref_input_method_whisper_summary">Downloads and runs an OpenAI Whisper model offline through sherpa-onnx. Much more accurate than Vosk, bigger download (~160MB)</string>
     <string name="pref_input_method_external_popup">External SpeechToText popup</string>
     <string name="pref_input_method_external_popup_summary">Opens the UI of another app through ACTION\u200B_\u200BRECOGNIZE\u200B_\u200BSPEECH, for example whisperIME, Kõnele, Futo Voice Input</string>
     <string name="pref_speech_output_method">Speech output method</string>
-    <string name="pref_speech_output_method_summary">Choose the service Mello should use to talk to you</string>
+    <string name="pref_speech_output_method_summary">Choose the service Jarvis should use to talk to you</string>
     <string name="pref_speech_output_method_android">Android text to speech engine</string>
     <string name="pref_speech_output_method_toast">Toast (popup message)</string>
     <string name="pref_speech_output_method_snackbar">Snackbar (message at the bottom)</string>
     <string name="pref_speech_output_method_nothing">Nothing</string>
     <string name="pref_wake_method">Wake word recognition method</string>
-    <string name="pref_wake_method_summary">Choose the service to use to listen for the \"Hey Dicio\" wakeup word in the background</string>
+    <string name="pref_wake_method_summary">Choose the service to use to listen for the \"Hey Jarvis\" wakeup word in the background</string>
     <string name="pref_wake_method_disabled">Disabled</string>
     <string name="pref_wake_method_openwakeword">OpenWakeWord offline audio processing</string>
     <string name="pref_wake_custom_delete">Delete custom wake word</string>
-    <string name="pref_wake_custom_delete_summary">Return to default \"Hey Dicio\" wake word</string>
+    <string name="pref_wake_custom_delete_summary">Return to default \"Hey Jarvis\" wake word</string>
     <string name="pref_wake_custom_import">Import custom wake word</string>
-    <string name="pref_wake_custom_import_summary_oww">Replace the default \"Hey Dicio\" wake word with a custom TFLite model; you can download some custom models from github.com/dscripka/openWakeWord/releases</string>
+    <string name="pref_wake_custom_import_summary_oww">Replace the default \"Hey Jarvis\" wake word with a custom TFLite model; you can download some custom models from github.com/dscripka/openWakeWord/releases</string>
     <string name="pref_skill_not_available">This skill is not yet available for your language. Contributions are welcome!</string>
     <string name="pref_skill_missing_permissions">Requires these permissions: %1$s</string>
     <string name="pref_skill_grant_permissions">Grant</string>
@@ -126,7 +126,7 @@
     <string name="eval_missing_permissions">The skill \"%1$s\" needs these permissions to work: %2$s</string>
     <string name="eval_fatal_error">Could not evaluate your request</string>
     <string name="eval_network_error">Network error</string>
-    <string name="eval_network_error_description">Mello could not reach the internet. Please check your connection and retry.</string>
+    <string name="eval_network_error_description">Jarvis could not reach the internet. Please check your connection and retry.</string>
     <string name="eval_no_match">I did not understand</string>
     <string name="eval_no_match_repeat">Could you repeat?</string>
     <string name="stt_say_something">Say something…</string>
@@ -197,22 +197,22 @@
     <string name="skill_timer_query_name">Timer %1$s expires in %2$s</string>
     <string name="skill_timer_query_last">The last timer expires in %1$s</string>
     <string name="skill_timer_none_canceled">OK, no timer was canceled</string>
-    <string name="stt_service_label">Mello offline speech recognition</string>
-    <string name="wake_service_label">Mello wake word service</string>
-    <string name="wake_service_foreground_notification_summary">This notification allows the Mello
+    <string name="stt_service_label">Jarvis offline speech recognition</string>
+    <string name="wake_service_label">Jarvis wake word service</string>
+    <string name="wake_service_foreground_notification_summary">This notification allows the Jarvis
         wake word service to listen to the microphone in the background</string>
     <string name="wake_service_foreground_notification">Listening for your wake word</string>
     <string name="wake_custom_service_foreground_notification">Listening for custom wake-up word</string>
-    <string name="wake_service_start_notification">Tap to start Mello wake word service</string>
-    <string name="wake_service_triggered_notification">Mello wake word triggered, tap to open</string>
-    <string name="wake_service_start_notification_summary">In Android 11+ Mello can\'t start the service without a manual interaction from the user.</string>
-    <string name="wake_service_triggered_notification_summary">In Android 10+ Mello can\'t start when a wake word is detected without showing a notification.</string>
+    <string name="wake_service_start_notification">Tap to start Jarvis wake word service</string>
+    <string name="wake_service_triggered_notification">Jarvis wake word triggered, tap to open</string>
+    <string name="wake_service_start_notification_summary">In Android 11+ Jarvis can\'t start the service without a manual interaction from the user.</string>
+    <string name="wake_service_triggered_notification_summary">In Android 10+ Jarvis can\'t start when a wake word is detected without showing a notification.</string>
     <string name="wake_word_setup_title">Setup wake word</string>
-    <string name="wake_word_setup_description">Mello will wake up automatically whenever you say your wake word.
+    <string name="wake_word_setup_description">Jarvis will wake up automatically whenever you say your wake word.
         This works by starting a service that always listens in the background.
         All speech processing happens locally, that\'s why you need to download the AI model in advance.</string>
     <string name="wake_word_error_downloading">An unexpected error occurred while downloading</string>
-    <string name="wake_word_error_downloading_network">Mello could not reach the internet. Please check your connection and retry.</string>
+    <string name="wake_word_error_downloading_network">Jarvis could not reach the internet. Please check your connection and retry.</string>
     <string name="wake_word_error_loading">An unexpected error occurred while loading</string>
     <string name="disable">Disable</string>
     <string name="retry">Retry</string>
@@ -258,7 +258,7 @@
     <string name="skill_notify_failed">Couldn\'t connect the notification listener service</string>
     <string name="skill_notify_no_notifications">You have no notifications</string>
     <string name="perm_notification_listener">read all notifications</string>
-    <string name="skill_notify_handler_label">Notify skill in Mello assistant</string>
+    <string name="skill_notify_handler_label">Notify skill in Jarvis assistant</string>
     <string name="skill_name_flashlight">Flashlight</string>
     <string name="skill_sentence_example_flashlight">Turn on the flashlight</string>
     <string name="skill_flashlight_turned_on">Flashlight turned on</string>
@@ -269,7 +269,7 @@
     <string name="about_version_copy">Copy version info</string>
     <string name="about_description">Multilanguage, local and libre voice assistant</string>
     <string name="about_repository_title">Source code repository</string>
-    <string name="about_repository_description">Mello is free and open source, licensed under GPLv3</string>
+    <string name="about_repository_description">Jarvis is free and open source, licensed under GPLv3</string>
     <string name="about_repository_link" translatable="false">https://github.com/Stypox/dicio-android</string>
     <string name="about_wiki_title">Documentation</string>
     <string name="about_wiki_description">Looking for general information, configuration guides, troubleshooting tips, and more? Check out our wiki!</string>
@@ -278,10 +278,10 @@
     <string name="about_issues_description">Feel free to request new features or report broken things (remember to attach logs)</string>
     <string name="about_issues_link" translatable="false">https://github.com/Stypox/dicio-android/issues</string>
     <string name="about_contributing_title">Contributing</string>
-    <string name="about_contributing_description">Mello is developed by volunteers around the world. You can help out too by contributing code improvements, translations and even new skills!</string>
+    <string name="about_contributing_description">Jarvis is developed by volunteers around the world. You can help out too by contributing code improvements, translations and even new skills!</string>
     <string name="about_contributing_link" translatable="false">https://github.com/Stypox/dicio-android#contributing</string>
     <string name="about_privacy_title">Privacy policy</string>
-    <string name="about_privacy_description">Mello connects to external services only when a skill is expected to do so, or to download machine learning models during setup. All speech processing is performed locally on-device, and most skills can be used offline.</string>
+    <string name="about_privacy_description">Jarvis connects to external services only when a skill is expected to do so, or to download machine learning models during setup. All speech processing is performed locally on-device, and most skills can be used offline.</string>
     <string name="about_privacy_link" translatable="false">https://stypox.org/dicio-privacy-policy.html</string>
     <string name="skill_name_music">Spotify music</string>
     <string name="skill_sentence_example_music">Play Believer on Spotify</string>
@@ -294,9 +294,9 @@
     <string name="pref_gemini_key_title">Gemini API key (cloud AI)</string>
     <string name="pref_gemini_key_empty">Not set: only the offline AI is used. Get a free key at aistudio.google.com</string>
     <string name="pref_gemini_key_set">Cloud AI on, with web search</string>
-    <string name="skill_music_opened_needs_accessibility">Opened %1$s in Spotify. To let me press play for you, turn on Mello Spotify player in Settings, Accessibility, Installed apps</string>
+    <string name="skill_music_opened_needs_accessibility">Opened %1$s in Spotify. To let me press play for you, turn on Jarvis Spotify player in Settings, Accessibility, Installed apps</string>
     <string name="skill_music_opened_could_not_press">Opened %1$s in Spotify, but I could not find the play button</string>
-    <string name="spotify_play_presser_label">Mello Spotify player</string>
-    <string name="spotify_play_presser_description">Lets Mello tap the Play button in Spotify after you ask it to play a song. It can only see and tap inside Spotify.</string>
+    <string name="spotify_play_presser_label">Jarvis Spotify player</string>
+    <string name="spotify_play_presser_description">Lets Jarvis tap the Play button in Spotify after you ask it to play a song. It can only see and tap inside Spotify.</string>
     <string name="wake_service_score">Heard: %1$d%% (triggers at %2$d%%)</string>
 </resources>

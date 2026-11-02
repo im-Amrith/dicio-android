@@ -22,62 +22,31 @@ class TelephoneSkill(
         val userContactName = when (inputData) {
             is Telephone.Dial -> inputData.who?.trim { it <= ' ' } ?: ""
         }
-        val contacts = Contact.getFilteredSortedContacts(contentResolver, userContactName)
+        val candidates = ContactMatcher.findCandidates(contentResolver, userContactName)
+        val best = candidates.firstOrNull()
+            ?: return TelephoneOutput(listOf(), yesNoData) // nobody matched
 
-        // A contact whose name is exactly what the user said (e.g. "Amma", ignoring case, spaces,
-        // emojis and punctuation) wins outright, even if other names contain it ("Ammachi"):
-        // call it right away instead of asking which one was meant.
-        val wanted = normalizeName(userContactName)
-        if (wanted.isNotEmpty()) {
-            val exact = contacts.filter { normalizeName(it.name) == wanted }
-            val exactWithNumbers = exact.map { Pair(it, it.getNumbers(contentResolver)) }
-                .filter { it.second.isNotEmpty() }
-            if (exactWithNumbers.size == 1) {
-                val number = exactWithNumbers[0].second[0]
-                call(ctx.android, number)
-                return ConfirmedCallOutput(number)
-            }
+        // a clear winner: call straight away
+        val runnerUp = candidates.getOrNull(1)
+        val clearWinner = best.score >= CALL_DIRECTLY_SCORE &&
+            (runnerUp == null || best.score - runnerUp.score >= CALL_DIRECTLY_MARGIN)
+        if (clearWinner || candidates.size == 1) {
+            val number = best.numbers[0]
+            call(ctx.android, number)
+            return ConfirmedCallOutput(number)
         }
 
-        val validContacts = ArrayList<Pair<String, List<String>>>()
-
-        var i = 0
-        while (validContacts.size < 5 && i < contacts.size) {
-            val contact = contacts[i]
-            val numbers = contact.getNumbers(contentResolver)
-            if (numbers.isEmpty()) {
-                ++i
-                continue
-            }
-            if (validContacts.isEmpty()
-                && contact.distance < 3
-                && numbers.size == 1 // it has just one number
-                && (contacts.size <= i + 1 // the next contact has a distance higher by 3+
-                        || contacts[i + 1].distance - 2 > contact.distance)
-            ) {
-                // very close match with just one number and without distance ties: call it directly
-                return ConfirmCallOutput(contact.name, numbers[0], yesNoData)
-            }
-            validContacts.add(Pair(contact.name, numbers))
-            ++i
-        }
-
-        if (validContacts.size == 1 // there is exactly one valid contact and ...
-            // ... either it has exactly one number, or we would be forced (because no number parser
-            // is available) to use ContactChooserName, which only uses the first phone number
-            // anyway
-            && (validContacts[0].second.size == 1 || ctx.parserFormatter == null)
-        ) {
-            // not a good enough match, but since we have only this, call it directly
-            val contact = validContacts[0]
-            return ConfirmCallOutput(contact.first, contact.second[0], yesNoData)
-        }
-
-        // this point will not be reached if a very close match was found
-        return TelephoneOutput(validContacts, yesNoData)
+        // otherwise let the user pick, best guesses first
+        return TelephoneOutput(
+            candidates.take(MAX_CHOICES).map { Pair(it.name, it.numbers) },
+            yesNoData,
+        )
     }
 
     companion object {
+        private const val CALL_DIRECTLY_SCORE = 0.85
+        private const val CALL_DIRECTLY_MARGIN = 0.1
+        private const val MAX_CHOICES = 5
         private val NOT_LETTER_OR_DIGIT = Regex("""[^\p{L}\p{N}]""")
 
         fun normalizeName(name: String): String = name.lowercase().replace(NOT_LETTER_OR_DIGIT, "")

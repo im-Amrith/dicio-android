@@ -11,7 +11,7 @@ import androidx.compose.ui.text.style.TextAlign
 fun Headline(text: String) {
     Text(
         text = text,
-        textAlign = TextAlign.Center,
+        textAlign = TextAlign.Start,
         style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -21,7 +21,7 @@ fun Headline(text: String) {
 fun Subtitle(text: String) {
     Text(
         text = text,
-        textAlign = TextAlign.Center,
+        textAlign = TextAlign.Start,
         style = MaterialTheme.typography.bodyLarge,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -31,7 +31,7 @@ fun Subtitle(text: String) {
 fun Body(text: String) {
     Text(
         text = text,
-        textAlign = TextAlign.Center,
+        textAlign = TextAlign.Start,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.fillMaxWidth(),
     )

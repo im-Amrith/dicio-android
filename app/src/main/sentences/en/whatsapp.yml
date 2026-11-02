@@ -1,0 +1,3 @@
+send:
+  - (send|text|message|whatsapp) (a|an)? (whatsapp)? (message|text)? to? .who. (on whatsapp)? (saying|that|says|telling them?) .message.
+  - tell .who. on whatsapp that? .message.

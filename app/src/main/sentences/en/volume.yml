@@ -1,0 +1,22 @@
+up:
+  - (turn|crank) (the|it)? volume up
+  - (increase|raise) (the|it)? volume
+  - volume up
+  - louder
+  - (make it|turn it) louder
+
+down:
+  - (turn) (the|it)? volume down
+  - (decrease|lower|reduce) (the|it)? volume
+  - volume down
+  - quieter
+  - (make it|turn it) quieter|softer
+
+mute:
+  - mute (the|my)? (phone|volume|sound|audio)?
+  - (silence|silent) (the|my)? phone
+  - (turn|switch) off (the)? sound
+
+max:
+  - (full|max|maximum) volume
+  - (volume|sound) (to)? (full|max|maximum)

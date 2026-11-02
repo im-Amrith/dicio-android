@@ -1,3 +1,5 @@
 dial:
   - (call up?)|(ring up)|phone|dial|contact .who.
   - call|ring .who. up
+  - (make|place|start) a? (phone|voice)? call to|with .who.
+  - (can|could you)? please? call|phone|ring to? .who. (please|now)?

@@ -142,3 +142,42 @@ skills:
         captures:
           - id: query
             type: string
+
+  - id: youtube
+    specificity: high
+    sentences:
+      - id: query
+        captures:
+          - id: query
+            type: string
+
+  - id: alarm
+    specificity: high
+    sentences:
+      - id: set
+        captures:
+          - id: time
+            type: string
+
+  - id: whatsapp
+    specificity: high
+    sentences:
+      - id: send
+        captures:
+          - id: who
+            type: string
+          - id: message
+            type: string
+
+  - id: volume
+    specificity: high
+    sentences:
+      - id: up
+      - id: down
+      - id: mute
+      - id: max
+
+  - id: battery
+    specificity: high
+    sentences:
+      - id: query

@@ -1,0 +1,5 @@
+query:
+  - play|watch|show|open|(put on)|find .query. on|in|from youtube
+  - youtube play? .query.
+  - (search|look up) youtube for .query.
+  - (play|show me?) (a|the)? (video|videos) (of|about|for|on)? .query.

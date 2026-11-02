@@ -1,0 +1,4 @@
+set:
+  - (set|create|make|put) (an|a|the|my)? alarm (for|at|to)? .time.
+  - wake me up (at|by)? .time.
+  - alarm (for|at) .time.

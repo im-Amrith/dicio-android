@@ -1,0 +1,4 @@
+query:
+  - (how much|whats the|what is the|what s the)? battery (level|percentage|charge|left|status)?
+  - how much (charge|battery) (do i have|is left)?
+  - (is|am) (my)? (phone)? charging

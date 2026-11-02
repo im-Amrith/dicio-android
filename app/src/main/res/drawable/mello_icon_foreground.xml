@@ -3,9 +3,9 @@
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
     <!-- five rounded sound-wave bars, kept inside the 66dp adaptive-icon safe zone -->
-    <path android:fillColor="#FF7DD3FC" android:pathData="M31,47a3,3 0 0,1 6,0v14a3,3 0 0,1 -6,0z"/>
-    <path android:fillColor="#FFA5B4FC" android:pathData="M41,40a3,3 0 0,1 6,0v28a3,3 0 0,1 -6,0z"/>
-    <path android:fillColor="#FFF0ABFC" android:pathData="M51,34a3,3 0 0,1 6,0v40a3,3 0 0,1 -6,0z"/>
-    <path android:fillColor="#FFA5B4FC" android:pathData="M61,40a3,3 0 0,1 6,0v28a3,3 0 0,1 -6,0z"/>
-    <path android:fillColor="#FF7DD3FC" android:pathData="M71,47a3,3 0 0,1 6,0v14a3,3 0 0,1 -6,0z"/>
+    <path android:fillColor="#FFB98535" android:pathData="M31,47a3,3 0 0,1 6,0v14a3,3 0 0,1 -6,0z"/>
+    <path android:fillColor="#FFD39A45" android:pathData="M41,40a3,3 0 0,1 6,0v28a3,3 0 0,1 -6,0z"/>
+    <path android:fillColor="#FFF0C27A" android:pathData="M51,34a3,3 0 0,1 6,0v40a3,3 0 0,1 -6,0z"/>
+    <path android:fillColor="#FFD39A45" android:pathData="M61,40a3,3 0 0,1 6,0v28a3,3 0 0,1 -6,0z"/>
+    <path android:fillColor="#FFB98535" android:pathData="M71,47a3,3 0 0,1 6,0v14a3,3 0 0,1 -6,0z"/>
 </vector>

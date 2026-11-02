@@ -139,7 +139,8 @@ class OpenWakeWordDevice(
         var lastScore = 0f
         const val MEL_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.tflite"
         const val EMB_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.tflite"
-        const val WAKE_URL = "https://github.com/Stypox/dicio-android/releases/download/v2.0/hey_dicio_v6.0.tflite"
+        // openWakeWord's pre-trained "Hey Jarvis" model
+        const val WAKE_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/hey_jarvis_v0.1.tflite"
 
         private fun userWakeFile(context: Context) =
             File(context.filesDir, "openWakeWord/userwake.tflite")

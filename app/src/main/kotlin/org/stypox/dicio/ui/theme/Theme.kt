@@ -273,16 +273,14 @@ fun AppTheme(
     dynamicColors: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    // Jarvis has one look: ink navy and brass. Only an explicit "light" choice changes it.
     val themeType = when (theme) {
-        Theme.UNRECOGNIZED,
-        Theme.THEME_SYSTEM -> if (isSystemInDarkTheme()) DARK else LIGHT
-        Theme.THEME_SYSTEM_DARK_BLACK -> if (isSystemInDarkTheme()) BLACK else LIGHT
         Theme.THEME_LIGHT -> LIGHT
-        Theme.THEME_DARK -> DARK
         Theme.THEME_BLACK -> BLACK
+        else -> DARK
     }
 
-    val colorScheme = if (dynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    val colorScheme = if (false && dynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val context = LocalContext.current
         if (themeType == LIGHT)
             dynamicLightColorScheme(context)

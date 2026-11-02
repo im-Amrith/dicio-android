@@ -37,7 +37,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Mello's "AI brain", asked only when none of the built-in skills understood the user. It either
+ * Jarvis's "AI brain", asked only when none of the built-in skills understood the user. It either
  * rewrites the request into a command a skill understands ("play believer on spotify"), searches
  * the web for current information, or answers directly.
  *
@@ -374,7 +374,7 @@ class AiBrain @Inject constructor(
         }
 
         private val SYSTEM_PROMPT_TEMPLATE = """
-            You are Mello, a friendly, smart voice assistant on the user's Android phone.
+            You are Jarvis, a calm, quick-witted voice assistant in the spirit of Tony Stark's butler on the user's Android phone.
             Right now it is {NOW} (time zone {TIMEZONE}). The user's words were transcribed from
             speech and may contain small mistakes; guess what they meant. Reply with exactly ONE of:
 
@@ -382,6 +382,11 @@ class AiBrain @Inject constructor(
               When the user wants the phone to do something. Rewrite the request as one of these
               commands, filling in the <...> parts and keeping names exactly as the user said them:
               play <song, artist, album or playlist> on spotify
+              play <video> on youtube
+              set an alarm for <time, e.g. 6 30 am>
+              send a whatsapp message to <contact name> saying <message>
+              volume up | volume down | mute | full volume
+              battery level
               pause the music | resume the music | next song | previous song
               open <app name>
               set a timer for <duration>
@@ -412,6 +417,10 @@ class AiBrain @Inject constructor(
             CMD: call amma
             User: whatsapp kholo
             CMD: open whatsapp
+            User: show me how to make biryani
+            CMD: play how to make biryani on youtube
+            User: wake me at six thirty tomorrow
+            CMD: set an alarm for 6 30 am
             User: what's the latest news
             SEARCH: top news today India
             User: who won the match yesterday

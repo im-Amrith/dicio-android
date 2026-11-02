@@ -42,8 +42,9 @@ fun WhatICanDo(skills: List<SkillInfo>) {
         } else {
             Text(
                 text = stringResource(R.string.here_is_what_i_can_do),
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Start,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -73,7 +74,8 @@ private fun SkillRow(
         Icon(
             painter = skill.icon(),
             contentDescription = null,
-            modifier = Modifier.size(36.dp)
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column {
@@ -84,8 +86,9 @@ private fun SkillRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = skill.sentenceExample(LocalContext.current),
+                text = "“" + skill.sentenceExample(LocalContext.current) + "”",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
