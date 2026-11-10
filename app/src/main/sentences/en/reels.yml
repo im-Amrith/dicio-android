@@ -1,0 +1,29 @@
+next:
+  - next (reel|video|one)
+  - (scroll|swipe) down? (to the next reel)?
+  - (scroll|swipe) (the)? reel down?
+  - skip (this|the)? reel
+
+previous:
+  - (previous|last) (reel|video|one)
+  - (scroll|swipe) up (to the previous reel)?
+  - (scroll|swipe) (the)? reel up
+  - go back (a|one|to the previous)? reel
+
+pause:
+  - (stop|pause|freeze|hold) (the|this)? (reel|video)
+  - stop it
+
+resume:
+  - (resume|continue|unpause) (the|this)? (reel|video)?
+  - play (the|this)? (reel|video) again?
+
+forward:
+  - (fast)? forward (5|five)? (seconds|second|secs)?
+  - skip (ahead|forward) (5|five)? (seconds|second|secs)?
+  - (go|jump) ahead (5|five) (seconds|second|secs)
+
+rewind:
+  - rewind (5|five)? (seconds|second|secs)?
+  - (go|jump|skip) back (5|five) (seconds|second|secs)
+  - back (5|five) (seconds|second|secs)

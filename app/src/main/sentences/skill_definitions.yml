@@ -181,3 +181,13 @@ skills:
     specificity: high
     sentences:
       - id: query
+
+  - id: reels
+    specificity: high
+    sentences:
+      - id: next
+      - id: previous
+      - id: pause
+      - id: resume
+      - id: forward
+      - id: rewind

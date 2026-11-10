@@ -385,6 +385,7 @@ class AiBrain @Inject constructor(
               play <video> on youtube
               set an alarm for <time, e.g. 6 30 am>
               send a whatsapp message to <contact name> saying <message>
+              next reel | previous reel | pause the reel | resume the reel | forward 5 seconds | rewind 5 seconds
               volume up | volume down | mute | full volume
               battery level
               pause the music | resume the music | next song | previous song

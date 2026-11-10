@@ -28,6 +28,7 @@ import org.stypox.dicio.skills.extra.BatteryInfo
 import org.stypox.dicio.skills.extra.VolumeInfo
 import org.stypox.dicio.skills.extra.WhatsappInfo
 import org.stypox.dicio.skills.extra.YoutubeInfo
+import org.stypox.dicio.skills.extra.ReelsInfo
 import org.stypox.dicio.skills.navigation.NavigationInfo
 import org.stypox.dicio.skills.notify.NotifyInfo
 import org.stypox.dicio.skills.open.OpenInfo
@@ -61,6 +62,7 @@ class SkillHandler @Inject constructor(
         MediaInfo,
         MusicInfo,
         YoutubeInfo,
+        ReelsInfo,
         AlarmInfo,
         WhatsappInfo,
         VolumeInfo,

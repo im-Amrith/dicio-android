@@ -294,9 +294,9 @@
     <string name="pref_gemini_key_title">Gemini API key (cloud AI)</string>
     <string name="pref_gemini_key_empty">Not set: only the offline AI is used. Get a free key at aistudio.google.com</string>
     <string name="pref_gemini_key_set">Cloud AI on, with web search</string>
-    <string name="skill_music_opened_needs_accessibility">Opened %1$s in Spotify. To let me press play for you, turn on Jarvis Spotify player in Settings, Accessibility, Installed apps</string>
+    <string name="skill_music_opened_needs_accessibility">Opened %1$s in Spotify. To let me press play for you, turn on Jarvis app control in Settings, Accessibility, Installed apps</string>
     <string name="skill_music_opened_could_not_press">Opened %1$s in Spotify, but I could not find the play button</string>
-    <string name="spotify_play_presser_label">Jarvis Spotify player</string>
-    <string name="spotify_play_presser_description">Lets Jarvis tap the Play button in Spotify after you ask it to play a song. It can only see and tap inside Spotify.</string>
+    <string name="spotify_play_presser_label">Jarvis app control</string>
+    <string name="spotify_play_presser_description">Lets Jarvis press Play in Spotify, and scroll, pause and skip Instagram reels when you ask. It can only see and act inside Spotify and Instagram.</string>
     <string name="wake_service_score">Heard: %1$d%% (triggers at %2$d%%)</string>
 </resources>
