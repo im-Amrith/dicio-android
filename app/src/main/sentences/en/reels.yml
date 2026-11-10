@@ -19,11 +19,11 @@ resume:
   - play (the|this)? (reel|video) again?
 
 forward:
-  - (fast)? forward (5|five)? (seconds|second|secs)?
-  - skip (ahead|forward) (5|five)? (seconds|second|secs)?
-  - (go|jump) ahead (5|five) (seconds|second|secs)
+  - (fast)? forward five? (seconds|second|secs)?
+  - skip (ahead|forward) five? (seconds|second|secs)?
+  - (go|jump) ahead five? (seconds|second|secs)
 
 rewind:
-  - rewind (5|five)? (seconds|second|secs)?
-  - (go|jump|skip) back (5|five) (seconds|second|secs)
-  - back (5|five) (seconds|second|secs)
+  - rewind five? (seconds|second|secs)?
+  - (go|jump|skip) back five? (seconds|second|secs)
+  - back five? (seconds|second|secs)
