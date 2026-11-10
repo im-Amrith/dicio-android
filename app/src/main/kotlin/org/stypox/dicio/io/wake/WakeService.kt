@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import org.stypox.dicio.MainActivity
 import org.stypox.dicio.MainActivity.Companion.ACTION_WAKE_WORD
 import org.stypox.dicio.R
+import org.stypox.dicio.skills.extra.ReelsVoiceControl
 import org.stypox.dicio.io.wake.oww.OpenWakeWordDevice
 import org.stypox.dicio.di.SttInputDeviceWrapper
 import org.stypox.dicio.di.WakeDeviceWrapper
@@ -244,6 +245,9 @@ class WakeService : Service() {
                 }
 
                 ar.read(audio, 0, audio.size)
+
+                // reels mode: reel commands without the wake word while Instagram is in front
+                ReelsVoiceControl.feed(applicationContext, audio)
 
                 val wakeWordDetected = wakeDevice.processFrame(audio)
                 if (wakeWordDetected && Instant.now() > nextWakeWordAllowed) {
