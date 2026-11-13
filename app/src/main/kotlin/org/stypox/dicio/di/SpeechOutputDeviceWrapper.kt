@@ -15,6 +15,9 @@ import org.stypox.dicio.io.speech.NothingSpeechDevice
 import org.stypox.dicio.io.speech.SnackbarSpeechDevice
 import org.stypox.dicio.io.speech.ToastSpeechDevice
 import org.stypox.dicio.settings.datastore.SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_ANDROID_TTS
+import org.stypox.dicio.settings.datastore.SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_KOKORO
+import org.stypox.dicio.io.speech.KokoroSpeechDevice
+import okhttp3.OkHttpClient
 import org.stypox.dicio.settings.datastore.SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_NOTHING
 import org.stypox.dicio.settings.datastore.SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_SNACKBAR
 import org.stypox.dicio.settings.datastore.SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_TOAST
@@ -32,6 +35,7 @@ class SpeechOutputDeviceWrapper @Inject constructor(
     // this is always instantiated, but will do nothing if
     // it is not the speech device chosen by the user
     private val snackbarSpeechDevice: SnackbarSpeechDevice,
+    private val okHttpClient: OkHttpClient,
 ) : SpeechOutputDevice {
 
     // instantiate SpeechOutputDevices on the main thread
@@ -54,6 +58,7 @@ class SpeechOutputDeviceWrapper @Inject constructor(
                         null,
                         UNRECOGNIZED,
                         SPEECH_OUTPUT_DEVICE_UNSET,
+                        SPEECH_OUTPUT_DEVICE_KOKORO -> KokoroSpeechDevice(context, okHttpClient, locale)
                         SPEECH_OUTPUT_DEVICE_ANDROID_TTS -> AndroidTtsSpeechDevice(context, locale)
                         SPEECH_OUTPUT_DEVICE_NOTHING -> NothingSpeechDevice()
                         SPEECH_OUTPUT_DEVICE_TOAST -> ToastSpeechDevice(context)

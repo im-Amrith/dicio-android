@@ -1,4 +1,4 @@
-name: Build Mello
+name: Build Jarvis
 
 # Every push to main builds a signed APK and publishes it as a GitHub release,
 # which Obtainium on the phone picks up and installs as an update.
@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
-          cp "$APK" "mello-${{ github.run_number }}.apk"
-          gh release create "v1.0.${{ github.run_number }}" "mello-${{ github.run_number }}.apk" \
-            --title "Mello build ${{ github.run_number }}" \
+          cp "$APK" "jarvis-${{ github.run_number }}.apk"
+          gh release create "v1.0.${{ github.run_number }}" "jarvis-${{ github.run_number }}.apk" \
+            --title "Jarvis build ${{ github.run_number }}" \
             --notes "Built from ${{ github.sha }}"

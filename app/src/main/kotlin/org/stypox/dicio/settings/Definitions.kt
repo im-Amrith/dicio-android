@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.KeyboardAlt
 import androidx.compose.material.icons.filled.Language
@@ -158,6 +159,12 @@ fun speechOutputDevice() = ListSetting(
     icon = Icons.Default.SpeakerPhone,
     description = stringResource(R.string.pref_speech_output_method_summary),
     possibleValues = listOf(
+        ListSetting.Value(
+            value = SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_KOKORO,
+            name = stringResource(R.string.pref_speech_output_method_kokoro),
+            description = stringResource(R.string.pref_speech_output_method_kokoro_summary),
+            icon = Icons.Default.RecordVoiceOver,
+        ),
         ListSetting.Value(
             value = SpeechOutputDevice.SPEECH_OUTPUT_DEVICE_ANDROID_TTS,
             name = stringResource(R.string.pref_speech_output_method_android),

@@ -177,8 +177,8 @@ dependencies {
     implementation(files(sherpaOnnxAar))
 
     // On-device LLM ("AI brain") through Google's LiteRT-LM
-    // pinned: newer releases are built with Kotlin 2.4, which this project's Kotlin 2.2 can't read
-    implementation("com.google.ai.edge.litertlm:litertlm-android:0.9.0")
+    // 0.19 runs Gemma 4; it is built with Kotlin 2.4, hence the Kotlin 2.4 toolchain
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.19.1")
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)

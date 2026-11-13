@@ -9,6 +9,7 @@ import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.SamplerConfig
+import com.google.ai.edge.litertlm.ThinkingConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +44,7 @@ import javax.inject.Singleton
  *
  * - Cloud (preferred): Google Gemini, when an API key is set in settings. Smart, remembers the
  *   last few exchanges so follow-up questions work.
- * - Local (fallback, offline): Qwen3 1.7B running on the phone through LiteRT-LM.
+ * - Local (fallback, offline): Google's Gemma 4 E2B running on the phone through LiteRT-LM.
  *
  * Both can use [WebLookup] for news and other real-time information.
  */
@@ -180,6 +181,10 @@ class AiBrain @Inject constructor(
                     httpClient = okHttpClient,
                     cacheDir = appContext.cacheDir,
                 ) { progress -> _status.value = Status.Downloading(progress) }
+                // remove older models (e.g. Qwen3 1.7B) to free space
+                modelDir.listFiles()?.filter {
+                    it.name.endsWith(".litertlm") && it.name != MODEL_FILE_NAME
+                }?.forEach { it.delete() }
                 _status.value = Status.Ready
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -195,7 +200,7 @@ class AiBrain @Inject constructor(
                 startDownload()
                 return Result.Unavailable(
                     "I didn't get that. For smarter answers, add a free Gemini API key in " +
-                        "settings. Meanwhile I'm downloading my offline brain (about 1 GB)."
+                        "settings. Meanwhile I'm downloading my offline brain (about 2.6 GB, best on Wi-Fi)."
                 )
             }
             is Status.Downloading -> {
@@ -218,15 +223,20 @@ class AiBrain @Inject constructor(
                             samplerConfig = SamplerConfig(topK = 1, topP = 0.95, temperature = 0.2),
                         )
                     ).use { conversation ->
-                        // "/no_think" turns off Qwen3's slow step-by-step reasoning
                         var reply = parseReply(
-                            conversation.sendMessage("$userInput /no_think").toString()
+                            conversation.sendMessage(
+                                userInput,
+                                maxOutputToken = MAX_OUTPUT_TOKENS,
+                                thinkingConfig = NO_THINKING,
+                            ).toString()
                         )
                         if (reply is Reply.Search) {
                             val results = web.search(reply.query)
                             reply = parseReply(
                                 conversation.sendMessage(
-                                    searchResultsMessage(reply.query, results) + " /no_think"
+                                    searchResultsMessage(reply.query, results),
+                                    maxOutputToken = MAX_OUTPUT_TOKENS,
+                                    thinkingConfig = NO_THINKING,
                                 ).toString()
                             )
                         }
@@ -301,10 +311,13 @@ class AiBrain @Inject constructor(
 
     companion object {
         private val TAG = AiBrain::class.simpleName
-        private const val MODEL_FILE_NAME = "Qwen3-1.7B_dynamic_wi4b32_afp32.litertlm"
+        private const val MODEL_FILE_NAME = "gemma-4-E2B-it.litertlm"
         private const val MODEL_URL =
-            "https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/$MODEL_FILE_NAME"
-        private const val MAX_TOKENS = 2048
+            "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/$MODEL_FILE_NAME"
+        private const val MAX_TOKENS = 4096
+        // answers are spoken, so they stay short; this also stops runaway essays
+        private const val MAX_OUTPUT_TOKENS = 200
+        private val NO_THINKING = ThinkingConfig(enableThinking = false)
         private const val IDLE_RELEASE_MILLIS = 5 * 60 * 1000L
         private const val MAX_HISTORY_TURNS = 12
         private const val HISTORY_TIMEOUT_MILLIS = 10 * 60 * 1000L
