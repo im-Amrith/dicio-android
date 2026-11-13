@@ -172,6 +172,17 @@ if (!sherpaOnnxAar.exists()) {
     partial.renameTo(sherpaOnnxAar)
 }
 
+// LiteRT-LM pulls in kotlin-stdlib 2.4, whose metadata Hilt 2.58 can't read: keep the standard
+// library at the compiler's version (LiteRT-LM only uses APIs that 2.3 already has)
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
+            useVersion(libs.versions.kotlin.get())
+            because("Hilt 2.58 reads Kotlin metadata only up to 2.3")
+        }
+    }
+}
+
 dependencies {
     // Whisper speech to text through sherpa-onnx (includes the Kotlin API and native libs)
     implementation(files(sherpaOnnxAar))
