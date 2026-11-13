@@ -13,9 +13,9 @@ dicioNumbers = "4140dfd299236270fe92b3690e220943bf801c4f"
 dicioSentencesCompiler = "6d0f1ca0a732c28329b3fd0f7c8f351e00933ad6"
 exp4j = "0.4.8"
 gradle = "8.13.0"
-dagger = "2.60.1"
+dagger = "2.59.2"
 # the Hilt Gradle plugin 2.58+ needs AGP 9; the old plugin works with the new Hilt compiler
-daggerPlugin = "2.57.2"
+daggerPlugin = "2.59.2"
 hilt = "1.2.0" # cannot update to 1.3.0 as its minSdk is 23
 includegitPlugin = "0.3.1"
 jacksonDataformatYaml = "2.20.0"
